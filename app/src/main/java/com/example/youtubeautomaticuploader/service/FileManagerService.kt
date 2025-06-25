@@ -101,7 +101,27 @@ class FileManagerService(private val context: Context) {
     }
     
     /**
-     * Generate title from filename
+     * Generate title from SRT file or filename
+     * Priority: SRT file content (address + time) > filename
+     */
+    suspend fun generateTitle(videoFile: File, subtitleFile: File?): String {
+        // First try to extract title from SRT file
+        if (subtitleFile != null && isValidSubtitleFile(subtitleFile)) {
+            val srtTitle = parseSrtForTitle(subtitleFile)
+            if (srtTitle != null) {
+                Log.d(TAG, "Using title from SRT: $srtTitle")
+                return srtTitle
+            }
+        }
+        
+        // Fallback to filename-based title
+        val filenameTitle = generateTitleFromFilename(videoFile.name)
+        Log.d(TAG, "Using title from filename: $filenameTitle")
+        return filenameTitle
+    }
+    
+    /**
+     * Generate title from filename (fallback method)
      */
     fun generateTitleFromFilename(filename: String): String {
         return filename
@@ -229,6 +249,123 @@ class FileManagerService(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Error deleting multiple files", e)
             Result.failure(e)
+        }
+    }
+    
+    /**
+     * Parse SRT file to extract title information from address and time
+     */
+    suspend fun parseSrtForTitle(srtFile: File): String? = withContext(Dispatchers.IO) {
+        try {
+            if (!isValidSubtitleFile(srtFile)) {
+                Log.w(TAG, "Invalid SRT file: ${srtFile.name}")
+                return@withContext null
+            }
+            
+            val content = srtFile.readText(Charsets.UTF_8)
+            val lines = content.lines()
+            
+            var address: String? = null
+            var time: String? = null
+            
+            // Find the first occurrence of "주소:" and "시간:" in the entire content
+            // Process line by line and also check within combined content
+            val cleanContent = content.replace("<[^>]*>".toRegex(), "") // Remove all HTML tags
+            
+            // Try to find in combined content first (for multi-line entries)
+            if (address == null) {
+                val addressMatch = "주소:\\s*([^\\n\\r]+)".toRegex().find(cleanContent)
+                if (addressMatch != null) {
+                    address = addressMatch.groupValues[1].trim()
+                    Log.d(TAG, "Found address in content: $address")
+                }
+            }
+            
+            if (time == null) {
+                val timeMatch = "시간:\\s*([^\\n\\r]+)".toRegex().find(cleanContent)
+                if (timeMatch != null) {
+                    val fullTime = timeMatch.groupValues[1].trim()
+                    time = formatTimeForTitle(fullTime)
+                    Log.d(TAG, "Found time in content: $time")
+                }
+            }
+            
+            // If not found in combined content, try line by line (fallback)
+            if (address == null || time == null) {
+                for (i in lines.indices) {
+                    var currentLine = lines[i].trim()
+                    
+                    // Remove HTML tags from current line
+                    currentLine = currentLine.replace("<[^>]*>".toRegex(), "")
+                    
+                    if (address == null && currentLine.contains("주소:")) {
+                        val addressMatch = "주소:\\s*(.+)".toRegex().find(currentLine)
+                        if (addressMatch != null) {
+                            address = addressMatch.groupValues[1].trim()
+                            Log.d(TAG, "Found address in line: $address")
+                        }
+                    }
+                    
+                    if (time == null && currentLine.contains("시간:")) {
+                        val timeMatch = "시간:\\s*(.+)".toRegex().find(currentLine)
+                        if (timeMatch != null) {
+                            val fullTime = timeMatch.groupValues[1].trim()
+                            time = formatTimeForTitle(fullTime)
+                            Log.d(TAG, "Found time in line: $time")
+                        }
+                    }
+                    
+                    // If both are found, break early
+                    if (address != null && time != null) {
+                        break
+                    }
+                }
+            }
+            
+            // Create title in format: "address, time"
+            return@withContext when {
+                address != null && time != null -> {
+                    val title = "$address, $time"
+                    Log.d(TAG, "Generated title from SRT: $title")
+                    title
+                }
+                address != null -> {
+                    Log.d(TAG, "Generated title with address only: $address")
+                    address
+                }
+                time != null -> {
+                    Log.d(TAG, "Generated title with time only: $time")
+                    time
+                }
+                else -> {
+                    Log.w(TAG, "No address or time found in SRT file: ${srtFile.name}")
+                    null
+                }
+            }
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing SRT file: ${srtFile.name}", e)
+            null
+        }
+    }
+    
+    /**
+     * Format time string for title
+     * Input: "2025. 5. 18. 17시 53분 8초"
+     * Output: "2025. 5. 18. 17시 53분"
+     */
+    private fun formatTimeForTitle(timeString: String): String {
+        return try {
+            // Remove seconds part (anything after the last "분")
+            val minuteIndex = timeString.lastIndexOf("분")
+            if (minuteIndex > 0) {
+                timeString.substring(0, minuteIndex + 1)
+            } else {
+                timeString
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to format time string: $timeString", e)
+            timeString
         }
     }
 }

@@ -109,7 +109,18 @@ class GalleryFragment : Fragment() {
                 val videoFile = videoWithSubtitle.videoFile
                 val subtitleFile = videoWithSubtitle.subtitleFile
 
-                titleText.text = videoFile.name
+                // Try to generate title from SRT if available, otherwise use filename
+                if (subtitleFile != null) {
+                    // Use coroutine to get title from SRT
+                    CoroutineScope(Dispatchers.Main).launch {
+                        val fileManager = FileManagerService(itemView.context)
+                        val title = fileManager.generateTitle(videoFile, subtitleFile)
+                        titleText.text = title
+                    }
+                } else {
+                    val fileManager = FileManagerService(itemView.context)
+                    titleText.text = fileManager.generateTitleFromFilename(videoFile.name)
+                }
 
                 val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
                 val lastModified = Date(videoFile.lastModified())

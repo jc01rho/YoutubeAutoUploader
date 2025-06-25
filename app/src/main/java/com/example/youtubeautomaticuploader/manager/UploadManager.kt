@@ -73,7 +73,8 @@ class UploadManager(private val context: Context) {
                         YouTubeUploadWorker.KEY_UPLOAD_INTERVAL_MINUTES to config.uploadIntervalMinutes,
                         YouTubeUploadWorker.KEY_PRIVACY_STATUS to config.privacyStatus,
                         YouTubeUploadWorker.KEY_CATEGORY_ID to config.categoryId,
-                        YouTubeUploadWorker.KEY_DELETE_AFTER_UPLOAD to config.deleteAfterUpload
+                        YouTubeUploadWorker.KEY_DELETE_AFTER_UPLOAD to config.deleteAfterUpload,
+                        YouTubeUploadWorker.KEY_CHANNEL_ID to config.selectedChannelId
                     )
                 )
                 
@@ -139,7 +140,8 @@ class UploadManager(private val context: Context) {
                         YouTubeUploadWorker.KEY_PROCESSED_DIRECTORY to config.processedDirectory,
                         YouTubeUploadWorker.KEY_PRIVACY_STATUS to config.privacyStatus,
                         YouTubeUploadWorker.KEY_CATEGORY_ID to config.categoryId,
-                        YouTubeUploadWorker.KEY_DELETE_AFTER_UPLOAD to config.deleteAfterUpload
+                        YouTubeUploadWorker.KEY_DELETE_AFTER_UPLOAD to config.deleteAfterUpload,
+                        YouTubeUploadWorker.KEY_CHANNEL_ID to config.selectedChannelId
                     )
                 )
                 .addTag("immediate_upload")

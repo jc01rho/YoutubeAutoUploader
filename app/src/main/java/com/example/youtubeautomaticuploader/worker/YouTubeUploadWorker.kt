@@ -24,6 +24,7 @@ class YouTubeUploadWorker(
         const val KEY_PRIVACY_STATUS = "privacy_status"
         const val KEY_CATEGORY_ID = "category_id"
         const val KEY_DELETE_AFTER_UPLOAD = "delete_after_upload"
+        const val KEY_CHANNEL_ID = "channel_id"
         
         // Output keys
         const val KEY_RESULT_MESSAGE = "result_message"
@@ -48,6 +49,7 @@ class YouTubeUploadWorker(
             val privacyStatus = inputData.getString(KEY_PRIVACY_STATUS) ?: "private"
             val categoryId = inputData.getString(KEY_CATEGORY_ID) ?: "22"
             val deleteAfterUpload = inputData.getBoolean(KEY_DELETE_AFTER_UPLOAD, false)
+            val channelId = inputData.getString(KEY_CHANNEL_ID) // Optional channel ID
             
             Log.d(TAG, "Starting upload work with account: $accountName")
             
@@ -94,7 +96,7 @@ class YouTubeUploadWorker(
                     }
                     
                     // Generate metadata
-                    val title = fileManagerService.generateTitleFromFilename(videoFile.name)
+                    val title = fileManagerService.generateTitle(videoFile, subtitleFile)
                     val fileSize = fileManagerService.getFileSizeInMB(videoFile)
                     val description = fileManagerService.generateDescription(
                         videoFile.name,
@@ -111,7 +113,8 @@ class YouTubeUploadWorker(
                         description = description,
                         tags = listOf("auto-upload", "video"),
                         categoryId = categoryId,
-                        privacyStatus = privacyStatus
+                        privacyStatus = privacyStatus,
+                        channelId = channelId
                     )
                     
                     if (uploadResult.isSuccess) {

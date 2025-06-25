@@ -59,7 +59,8 @@ class YouTubeService(private val context: Context) {
         description: String,
         tags: List<String> = emptyList(),
         categoryId: String = "22", // People & Blogs
-        privacyStatus: String = "private" // private, public, unlisted
+        privacyStatus: String = "private", // private, public, unlisted
+        channelId: String? = null // Optional channel ID for multi-channel accounts
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
             val youTubeService = youTube ?: throw IllegalStateException("YouTube service not initialized")
@@ -71,6 +72,8 @@ class YouTubeService(private val context: Context) {
                     this.description = description
                     this.tags = tags
                     this.categoryId = categoryId
+                    // Set channel ID if provided for multi-channel accounts
+                    channelId?.let { this.channelId = it }
                 }
                 status = VideoStatus().apply {
                     this.privacyStatus = privacyStatus
