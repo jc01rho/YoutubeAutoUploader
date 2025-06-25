@@ -21,6 +21,9 @@ class UploadManager(private val context: Context) {
         private const val KEY_UPLOAD_INTERVAL = "upload_interval"
         private const val KEY_PRIVACY_STATUS = "privacy_status"
         private const val KEY_CATEGORY_ID = "category_id"
+        private const val KEY_DELETE_AFTER_UPLOAD = "delete_after_upload"
+        private const val KEY_SELECTED_CHANNEL_ID = "selected_channel_id"
+        private const val KEY_SELECTED_CHANNEL_TITLE = "selected_channel_title"
     }
     
     private val workManager = WorkManager.getInstance(context)
@@ -33,7 +36,10 @@ class UploadManager(private val context: Context) {
         val processedDirectory: String,
         val uploadIntervalMinutes: Long = 60, // Default 1 hour
         val privacyStatus: String = "private", // private, public, unlisted
-        val categoryId: String = "22" // People & Blogs
+        val categoryId: String = "22", // People & Blogs
+        val deleteAfterUpload: Boolean = false, // Delete files after successful upload
+        val selectedChannelId: String? = null, // Selected YouTube channel ID
+        val selectedChannelTitle: String? = null // Selected YouTube channel title
     )
     
     /**
@@ -66,7 +72,8 @@ class UploadManager(private val context: Context) {
                         YouTubeUploadWorker.KEY_PROCESSED_DIRECTORY to config.processedDirectory,
                         YouTubeUploadWorker.KEY_UPLOAD_INTERVAL_MINUTES to config.uploadIntervalMinutes,
                         YouTubeUploadWorker.KEY_PRIVACY_STATUS to config.privacyStatus,
-                        YouTubeUploadWorker.KEY_CATEGORY_ID to config.categoryId
+                        YouTubeUploadWorker.KEY_CATEGORY_ID to config.categoryId,
+                        YouTubeUploadWorker.KEY_DELETE_AFTER_UPLOAD to config.deleteAfterUpload
                     )
                 )
                 
@@ -82,7 +89,7 @@ class UploadManager(private val context: Context) {
             // Enqueue work
             workManager.enqueueUniquePeriodicWork(
                 WORK_NAME,
-                ExistingPeriodicWorkPolicy.REPLACE,
+                ExistingPeriodicWorkPolicy.UPDATE,
                 workRequest
             )
             
@@ -131,7 +138,8 @@ class UploadManager(private val context: Context) {
                         YouTubeUploadWorker.KEY_SUBTITLE_DIRECTORY to config.subtitleDirectory,
                         YouTubeUploadWorker.KEY_PROCESSED_DIRECTORY to config.processedDirectory,
                         YouTubeUploadWorker.KEY_PRIVACY_STATUS to config.privacyStatus,
-                        YouTubeUploadWorker.KEY_CATEGORY_ID to config.categoryId
+                        YouTubeUploadWorker.KEY_CATEGORY_ID to config.categoryId,
+                        YouTubeUploadWorker.KEY_DELETE_AFTER_UPLOAD to config.deleteAfterUpload
                     )
                 )
                 .addTag("immediate_upload")
@@ -171,7 +179,7 @@ class UploadManager(private val context: Context) {
     /**
      * Save configuration to SharedPreferences
      */
-    private fun saveConfiguration(config: UploadConfig) {
+    fun saveConfiguration(config: UploadConfig) {
         sharedPrefs.edit().apply {
             putString(KEY_ACCOUNT_NAME, config.accountName)
             putString(KEY_VIDEO_DIRECTORY, config.videoDirectory)
@@ -180,6 +188,9 @@ class UploadManager(private val context: Context) {
             putLong(KEY_UPLOAD_INTERVAL, config.uploadIntervalMinutes)
             putString(KEY_PRIVACY_STATUS, config.privacyStatus)
             putString(KEY_CATEGORY_ID, config.categoryId)
+            putBoolean(KEY_DELETE_AFTER_UPLOAD, config.deleteAfterUpload)
+            putString(KEY_SELECTED_CHANNEL_ID, config.selectedChannelId)
+            putString(KEY_SELECTED_CHANNEL_TITLE, config.selectedChannelTitle)
             apply()
         }
     }
@@ -202,7 +213,10 @@ class UploadManager(private val context: Context) {
                 processedDirectory = processedDirectory,
                 uploadIntervalMinutes = sharedPrefs.getLong(KEY_UPLOAD_INTERVAL, 60),
                 privacyStatus = sharedPrefs.getString(KEY_PRIVACY_STATUS, "private") ?: "private",
-                categoryId = sharedPrefs.getString(KEY_CATEGORY_ID, "22") ?: "22"
+                categoryId = sharedPrefs.getString(KEY_CATEGORY_ID, "22") ?: "22",
+                deleteAfterUpload = sharedPrefs.getBoolean(KEY_DELETE_AFTER_UPLOAD, false),
+                selectedChannelId = sharedPrefs.getString(KEY_SELECTED_CHANNEL_ID, null),
+                selectedChannelTitle = sharedPrefs.getString(KEY_SELECTED_CHANNEL_TITLE, null)
             )
         } else {
             null

@@ -154,6 +154,58 @@ class YouTubeService(private val context: Context) {
     }
     
     /**
+     * Get list of YouTube channels for the authenticated user
+     */
+    suspend fun getChannelList(): Result<List<ChannelInfo>> = withContext(Dispatchers.IO) {
+        try {
+            val youTubeService = youTube ?: throw IllegalStateException("YouTube service not initialized")
+            
+            val channelsRequest = youTubeService.channels()
+                .list(listOf("snippet", "contentDetails", "statistics"))
+                .setMine(true)
+            
+            val channelsResponse = channelsRequest.execute()
+            val channels = channelsResponse.items
+            
+            val channelInfoList = channels.map { channel ->
+                ChannelInfo(
+                    id = channel.id,
+                    title = channel.snippet.title,
+                    description = channel.snippet.description ?: "",
+                    thumbnailUrl = channel.snippet.thumbnails?.default?.url ?: "",
+                    subscriberCount = channel.statistics?.subscriberCount?.toLong() ?: 0L,
+                    videoCount = channel.statistics?.videoCount?.toLong() ?: 0L
+                )
+            }
+            
+            Log.d(TAG, "Found ${channelInfoList.size} channels")
+            Result.success(channelInfoList)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get channel list", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Set the selected channel for uploads
+     */
+    fun setSelectedChannel(channelId: String) {
+        // Store the selected channel ID for future uploads
+        // This will be used when uploading videos
+        Log.d(TAG, "Selected channel ID: $channelId")
+    }
+    
+    data class ChannelInfo(
+        val id: String,
+        val title: String,
+        val description: String,
+        val thumbnailUrl: String,
+        val subscriberCount: Long,
+        val videoCount: Long
+    )
+
+    /**
      * Check if service is initialized and ready
      */
     fun isInitialized(): Boolean {

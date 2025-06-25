@@ -23,6 +23,7 @@ class YouTubeUploadWorker(
         const val KEY_UPLOAD_INTERVAL_MINUTES = "upload_interval_minutes"
         const val KEY_PRIVACY_STATUS = "privacy_status"
         const val KEY_CATEGORY_ID = "category_id"
+        const val KEY_DELETE_AFTER_UPLOAD = "delete_after_upload"
         
         // Output keys
         const val KEY_RESULT_MESSAGE = "result_message"
@@ -46,6 +47,7 @@ class YouTubeUploadWorker(
             
             val privacyStatus = inputData.getString(KEY_PRIVACY_STATUS) ?: "private"
             val categoryId = inputData.getString(KEY_CATEGORY_ID) ?: "22"
+            val deleteAfterUpload = inputData.getBoolean(KEY_DELETE_AFTER_UPLOAD, false)
             
             Log.d(TAG, "Starting upload work with account: $accountName")
             
@@ -137,12 +139,31 @@ class YouTubeUploadWorker(
                             results.add("✅ ${videoFile.name}")
                         }
                         
-                        // Move video to processed directory
-                        fileManagerService.moveToProcessedDirectory(videoFile, processedDirectory)
-                        
-                        // Move subtitle to processed directory if exists
-                        subtitleFile?.let { 
-                            fileManagerService.moveToProcessedDirectory(it, processedDirectory)
+                        // Handle file after successful upload
+                        if (deleteAfterUpload) {
+                            // Delete original files
+                            val videoDeleteResult = fileManagerService.deleteFile(videoFile)
+                            if (videoDeleteResult.isSuccess) {
+                                Log.d(TAG, "Video file deleted: ${videoFile.name}")
+                            } else {
+                                Log.w(TAG, "Failed to delete video file: ${videoFile.name}")
+                            }
+                            
+                            subtitleFile?.let { 
+                                val subtitleDeleteResult = fileManagerService.deleteFile(it)
+                                if (subtitleDeleteResult.isSuccess) {
+                                    Log.d(TAG, "Subtitle file deleted: ${it.name}")
+                                } else {
+                                    Log.w(TAG, "Failed to delete subtitle file: ${it.name}")
+                                }
+                            }
+                        } else {
+                            // Move files to processed directory
+                            fileManagerService.moveToProcessedDirectory(videoFile, processedDirectory)
+                            
+                            subtitleFile?.let { 
+                                fileManagerService.moveToProcessedDirectory(it, processedDirectory)
+                            }
                         }
                         
                         uploadedCount++

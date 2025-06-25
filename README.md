@@ -9,8 +9,10 @@ An Android application that automatically uploads MP4 video files and SRT subtit
 - 🔄 **Background Processing**: Uses WorkManager for reliable background uploads
 - 📱 **User-friendly Interface**: Simple UI to configure directories and upload settings
 - 🔐 **Google Authentication**: Secure OAuth2 authentication with Google
-- 📊 **Upload History**: Track upload status and results
+- � **Multi-Channel Support**: Select from multiple YouTube channels on the same Google account
+- �📊 **Upload History**: Track upload status and results
 - 🔧 **Configurable Settings**: Set upload intervals, privacy settings, and directories
+- 🗑️ **File Management Options**: Choose to delete files or move them to processed directory after upload
 
 ## Setup Instructions
 
@@ -32,14 +34,32 @@ An Android application that automatically uploads MP4 video files and SRT subtit
 ### 3. App Configuration
 
 1. **Sign in with Google**: Use your Google account that has access to YouTube
-2. **Set Directories**:
+2. **Select YouTube Channel**: Choose which channel to upload to (if you have multiple channels)
+3. **Set Directories**:
    - Video Directory: Path where MP4 files are stored
    - Subtitle Directory: Path where SRT files are stored
    - Processed Directory: Path where uploaded files will be moved
 3. **Configure Upload Settings**:
    - Upload Interval: How often to check for new files (in minutes)
    - Privacy Status: private, public, or unlisted
+   - **Delete After Upload**: Option to permanently delete original files after successful upload
+     - ⚠️ **Warning**: This option permanently deletes your original files
+     - Alternative: Files can be moved to a "processed" directory instead
 4. **Start Auto Upload**: Enable automatic background uploading
+
+## File Management Options
+
+The app provides two options for handling files after successful upload:
+
+1. **Move to Processed Directory** (Default): 
+   - Original files are moved to a designated "processed" directory
+   - Files are preserved and can be recovered if needed
+   - Recommended for most users
+
+2. **Delete After Upload**:
+   - ⚠️ **Permanently deletes** original files after successful upload
+   - Saves storage space but cannot be undone
+   - Use with caution - ensure you have backups if needed
 
 ## File Matching
 

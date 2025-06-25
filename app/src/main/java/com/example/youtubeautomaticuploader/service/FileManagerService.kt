@@ -175,4 +175,60 @@ class FileManagerService(private val context: Context) {
             Result.failure(e)
         }
     }
+    
+    /**
+     * Delete file after successful upload
+     */
+    suspend fun deleteFile(file: File): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            if (!file.exists()) {
+                Log.w(TAG, "File does not exist: ${file.absolutePath}")
+                return@withContext Result.success(true) // Consider as successful if file doesn't exist
+            }
+            
+            val success = file.delete()
+            if (success) {
+                Log.d(TAG, "File deleted successfully: ${file.absolutePath}")
+                Result.success(true)
+            } else {
+                Log.e(TAG, "Failed to delete file: ${file.absolutePath}")
+                Result.failure(Exception("Failed to delete file: ${file.name}"))
+            }
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error deleting file: ${file.absolutePath}", e)
+            Result.failure(e)
+        }
+    }
+    
+    /**
+     * Delete multiple files
+     */
+    suspend fun deleteFiles(files: List<File>): Result<List<String>> = withContext(Dispatchers.IO) {
+        try {
+            val deletedFiles = mutableListOf<String>()
+            val failedFiles = mutableListOf<String>()
+            
+            files.forEach { file ->
+                val result = deleteFile(file)
+                if (result.isSuccess) {
+                    deletedFiles.add(file.name)
+                } else {
+                    failedFiles.add(file.name)
+                }
+            }
+            
+            if (failedFiles.isEmpty()) {
+                Log.d(TAG, "All files deleted successfully: ${deletedFiles.size} files")
+                Result.success(deletedFiles)
+            } else {
+                Log.w(TAG, "Some files failed to delete. Success: ${deletedFiles.size}, Failed: ${failedFiles.size}")
+                Result.failure(Exception("Failed to delete ${failedFiles.size} files: ${failedFiles.joinToString(", ")}"))
+            }
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error deleting multiple files", e)
+            Result.failure(e)
+        }
+    }
 }
