@@ -1,9 +1,15 @@
 package com.example.youtubeautomaticuploader.ui.gallery
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -11,7 +17,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.youtubeautomaticuploader.databinding.FragmentGalleryBinding
 import com.example.youtubeautomaticuploader.service.FileManagerService
 import kotlinx.coroutines.*
-import android.widget.TextView
 import android.view.ViewParent
 import java.io.File
 import java.text.SimpleDateFormat
@@ -28,6 +33,18 @@ class GalleryFragment : Fragment() {
 
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
+    // Permission launcher
+    private val permissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.all { it.value }
+        if (allGranted) {
+            loadFiles()
+        } else {
+            Toast.makeText(requireContext(), "Storage permissions are required to view files", Toast.LENGTH_LONG).show()
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -38,8 +55,32 @@ class GalleryFragment : Fragment() {
 
         fileManagerService = FileManagerService(requireContext())
         setupRecyclerView()
+        checkPermissions()
 
         return binding.root
+    }
+
+    private fun checkPermissions() {
+        val permissions = mutableListOf<String>()
+
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE) 
+            != PackageManager.PERMISSION_GRANTED) {
+            permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.MANAGE_EXTERNAL_STORAGE) 
+                != PackageManager.PERMISSION_GRANTED) {
+                permissions.add(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
+            }
+        }
+
+        if (permissions.isNotEmpty()) {
+            permissionLauncher.launch(permissions.toTypedArray())
+        } else {
+            // Permissions already granted, load files
+            loadFiles()
+        }
     }
 
     private fun setupRecyclerView() {
@@ -49,8 +90,7 @@ class GalleryFragment : Fragment() {
             adapter = fileAdapter
         }
 
-        // Load files when fragment is created
-        loadFiles()
+        // Files will be loaded after permissions check
     }
 
     private fun loadFiles() {

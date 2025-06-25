@@ -7,12 +7,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.work.WorkInfo
@@ -447,7 +450,7 @@ class HomeFragment : Fragment() {
         binding.btnSelectChannel.text = "Loading..."
         
         // Initialize YouTube service and get channels
-        homeViewModel.viewModelScope.launch {
+        lifecycleScope.launch {
             try {
                 youTubeService.initialize(selectedAccountName!!)
                 val result = youTubeService.getChannelList()
@@ -502,7 +505,6 @@ class HomeFragment : Fragment() {
                 selectedChannelId = channelId,
                 selectedChannelTitle = channelTitle
             )
-            // Save configuration (this will be handled by the manager)
             uploadManager.saveConfiguration(updatedConfig)
         }
     }
@@ -543,14 +545,6 @@ class HomeFragment : Fragment() {
                 // Set click listener
                 itemView.setOnClickListener {
                     onChannelSelected(channel)
-                    // Close dialog
-                    (itemView.context as? androidx.appcompat.app.AppCompatActivity)?.let { activity ->
-                        activity.supportFragmentManager.fragments.forEach { fragment ->
-                            if (fragment is androidx.appcompat.app.AlertDialog) {
-                                // This won't work directly, we'll handle it in the parent
-                            }
-                        }
-                    }
                 }
                 
                 // TODO: Load thumbnail image using an image loading library like Glide or Picasso
