@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">YouTube Auto Uploader</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">YouTube Auto Uploader</string>
+    <string name="nav_header_subtitle">Automatic video and subtitle upload</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="menu_home">Upload Manager</string>
+    <string name="menu_gallery">File Browser</string>
+    <string name="menu_slideshow">Upload History</string>
+</resources>
