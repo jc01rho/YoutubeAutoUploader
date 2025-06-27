@@ -1,14 +1,15 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("com.google.gms.google-services") version "4.4.0" apply false
 }
 
 android {
-    namespace = "com.example.youtubeautomaticuploader"
+    namespace = "com.jc01rho.youtubeautomaticuploader"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.youtubeautomaticuploader"
+        applicationId = "com.jc01rho.youtubeautomaticuploader"
         minSdk = 29
         targetSdk = 36
         versionCode = 1
@@ -64,6 +65,7 @@ dependencies {
     implementation(libs.google.api.client.android)
     implementation(libs.google.api.services.youtube)
     implementation(libs.google.auth.library)
+    implementation(libs.google.oauth2.client)
 
     // Network and async operations
     implementation(libs.okhttp)
@@ -71,9 +73,6 @@ dependencies {
 
     // Background work
     implementation(libs.androidx.work.runtime.ktx)
-
-    // Google Sign-In
-    implementation(libs.google.signin)
 
     // HTTP clients
     implementation(libs.google.http.client)

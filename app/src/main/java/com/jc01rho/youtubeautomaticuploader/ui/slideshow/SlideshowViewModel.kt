@@ -1,4 +1,4 @@
-package com.example.youtubeautomaticuploader.ui.slideshow
+package com.jc01rho.youtubeautomaticuploader.ui.slideshow
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData

@@ -1,4 +1,4 @@
-package com.example.youtubeautomaticuploader
+package com.jc01rho.youtubeautomaticuploader
 
 import org.junit.Test
 
